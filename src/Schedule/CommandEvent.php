@@ -4,6 +4,7 @@ namespace Llaski\NovaScheduledJobs\Schedule;
 
 use Illuminate\Console\Parser;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Arr;
 
 class CommandEvent extends Event
 {
@@ -16,7 +17,7 @@ class CommandEvent extends Event
 
     public function className()
     {
-        list($command) = Parser::parse($this->command());
+        [$command] = Parser::parse($this->command());
 
         $commands = app(Kernel::class)->all();
 
@@ -25,6 +26,20 @@ class CommandEvent extends Event
         }
 
         return get_class($commands[$command]);
+    }
+
+    public function description()
+    {
+        try {
+            if ($this->event->description) {
+                return $this->event->description;
+            }
+
+            $reflection = new \ReflectionClass($this->className());
+            return (string) Arr::get($reflection->getDefaultProperties(), 'description', '');
+        } catch (\ReflectionException $exception) {
+            return '';
+        }
     }
 
 }
